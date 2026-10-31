@@ -10,13 +10,22 @@ Para agregar o quitar una liga, edita `js/ligas.js` (el `id` es el código de la
 
 ## Qué tiene
 
-- **Partidos**: tira de fechas con el número de partidos por día, todas las ligas o solo la seleccionada, marcador en vivo (se actualiza cada minuto mientras haya partidos en juego) y horarios en la zona horaria del visitante.
-- **Tabla de posiciones**: con zonas de clasificación y descenso, y selector de fase o grupo cuando la competencia tiene varias (Liga BetPlay: Clausura, reclasificación, cuadrangulares).
-- **Equipos**: buscador y ficha de cada equipo con su posición, próximos partidos y últimos resultados.
+- **Partidos**: tira de fechas (ayer, hoy y 7 días más) con el número de partidos por día; todas las ligas, solo la seleccionada o solo tus equipos. Marcadores en vivo que se actualizan cada minuto y horarios en la zona horaria del visitante.
+- **Detalle de partido**: al tocar un partido se ven los goles con su minuto y asistencia, tarjetas, cambios, estadísticas (posesión, tiros, córners…), alineaciones con formación y los últimos 5 resultados de cada equipo. Se actualiza solo mientras el partido está en juego.
+- **Tabla de posiciones**: con zonas de clasificación y descenso, racha de los últimos 5 partidos y selector de fase o grupo cuando la competencia tiene varias.
+- **Eliminatorias**: llaves por ronda (ida, vuelta, global y penales) de la edición más reciente: Champions, Libertadores, playoffs de la Liga BetPlay, etc.
+- **Equipos favoritos**: con la estrella se sigue a un equipo; sus partidos salen primero en el calendario y su fila se resalta en la tabla. Se guardan solo en el navegador.
+- **Noticias** de la liga seleccionada, enlazadas a la nota original en ESPN.
+- **Rápida al volver**: lo consultado se guarda en el navegador con una vigencia corta, así que al recargar aparece al instante.
+- **Modo oscuro** automático según el sistema.
+- **Instalable** en el celular o el computador como app (desde el menú del navegador, "Instalar" o "Agregar a pantalla de inicio").
+- El título de la pestaña muestra cuántos partidos hay en vivo.
 
 ## Datos
 
 Los datos vienen de la API pública de ESPN (`site.api.espn.com`), que no necesita clave. Si el navegador bloquea la petición directa, la página reintenta una vez a través de `corsproxy.io`.
+
+La API no acepta rangos de días, pero sí un mes (`dates=AAAAMM`) o un año (`dates=AAAA`) completos: el calendario se carga con dos consultas por liga y la racha y las llaves salen de la consulta del año.
 
 ## Cómo verla
 
@@ -28,9 +37,15 @@ No necesita compilación ni dependencias.
 ## Estructura
 
 ```
-index.html      estructura de la página
-css/styles.css  estilos (paleta de césped, cal y tarjetas)
-js/ligas.js     lista de ligas y días a mostrar
-js/api.js       consultas a la API y normalización de datos
-js/app.js       interfaz: ligas, fechas, partidos, tabla, equipos y ficha
+index.html            estructura de la página
+css/styles.css        estilos (paleta de césped, cal y tarjetas; modo oscuro)
+js/ligas.js           lista de ligas y días a mostrar
+js/almacen.js         caché en el navegador y equipos favoritos
+js/util.js            utilidades compartidas (formato, escudos, traducciones)
+js/api.js             consultas a la API y normalización de datos
+js/partido.js         ventana de detalle de partido
+js/app.js             interfaz: ligas, fechas, partidos, tabla, llaves, equipos, noticias
+sw.js                 service worker (app instalable)
+manifest.webmanifest  datos de la app instalable
+iconos/               íconos de la app
 ```

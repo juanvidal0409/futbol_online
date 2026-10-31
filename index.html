@@ -6,6 +6,10 @@
   <title>Fútbol Online</title>
   <meta name="description" content="Tablas de posiciones, equipos y calendario de las principales ligas del mundo, la Champions League y la Liga BetPlay.">
   <meta name="theme-color" content="#0d4a2b">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="iconos/icono-180.png">
+  <meta name="apple-mobile-web-app-title" content="Fútbol Online">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d4a2b'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23f4f7f1' stroke-width='4'/%3E%3Cpath d='M32 4v56' stroke='%23f4f7f1' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23ffd23f'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,6 +52,7 @@
         <div class="alcance" role="group" aria-label="Qué partidos mostrar">
           <button type="button" class="alcance__btn" data-alcance="todas" aria-pressed="true">Todas las ligas</button>
           <button type="button" class="alcance__btn" data-alcance="liga" aria-pressed="false" id="alcance-liga">Solo esta liga</button>
+          <button type="button" class="alcance__btn" data-alcance="favoritos" aria-pressed="false">★ Mis equipos</button>
         </div>
       </div>
 
@@ -70,6 +75,14 @@
       <ul class="leyenda" id="leyenda"></ul>
     </section>
 
+    <section class="panel panel--llaves" id="panel-llaves" aria-labelledby="t-llaves" hidden>
+      <div class="panel__cabeza">
+        <h2 id="t-llaves" class="panel__titulo">Eliminatorias</h2>
+        <p class="panel__liga" id="llaves-edicion"></p>
+      </div>
+      <div class="llaves" id="llaves"></div>
+    </section>
+
     <section class="panel panel--equipos" aria-labelledby="t-equipos">
       <div class="panel__cabeza">
         <h2 id="t-equipos" class="panel__titulo">Equipos</h2>
@@ -78,7 +91,16 @@
           <input type="search" id="buscar" placeholder="Buscar equipo" autocomplete="off">
         </label>
       </div>
+      <p class="panel__ayuda">Toca la estrella para seguir a un equipo: sus partidos saldrán primero.</p>
       <div id="equipos" class="equipos"></div>
+    </section>
+
+    <section class="panel panel--noticias" aria-labelledby="t-noticias">
+      <div class="panel__cabeza">
+        <h2 id="t-noticias" class="panel__titulo">Noticias</h2>
+        <p class="panel__liga" id="noticias-liga"></p>
+      </div>
+      <div id="noticias" class="noticias"></div>
     </section>
   </main>
 
@@ -87,12 +109,20 @@
     <button type="button" class="ficha__cerrar" id="ficha-cerrar" aria-label="Cerrar">×</button>
   </dialog>
 
+  <dialog class="ficha detalle" id="detalle" aria-label="Detalle del partido">
+    <div class="ficha__cuerpo" id="detalle-cuerpo"></div>
+    <button type="button" class="ficha__cerrar" id="detalle-cerrar" aria-label="Cerrar">×</button>
+  </dialog>
+
   <footer class="pie">
-    <p>Datos en vivo de la API pública de ESPN. Horarios en tu zona horaria. Se actualiza solo cada minuto mientras haya partidos en juego.</p>
+    <p>Datos y noticias de la API pública de ESPN. Los marcadores se actualizan solos cada minuto mientras haya partidos en juego. Tus equipos favoritos se guardan solo en este navegador.</p>
   </footer>
 
   <script src="js/ligas.js"></script>
+  <script src="js/almacen.js"></script>
+  <script src="js/util.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/partido.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
