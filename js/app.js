@@ -359,7 +359,7 @@
         <th scope="col" class="c-pts"><abbr title="Puntos">Pts</abbr></th>
       </tr></thead>
       <tbody>${g.entradas.map((e) => `
-        <tr style="--zona:${e.zona?.color ? '#' + String(e.zona.color).replace('#', '') : 'transparent'}" ${e.zona?.texto ? `title="${esc(e.zona.texto)}"` : ''}>
+        <tr style="--zona:${e.zona?.color ? '#' + String(e.zona.color).replace('#', '') : 'transparent'}" ${e.zona?.texto ? `title="${esc(traducirZona(e.zona.texto))}"` : ''}>
           <td class="c-pos">${n(e.pos)}</td>
           <th scope="row" class="c-equipo">
             <button type="button" class="tabla__equipo" data-equipo="${esc(e.id)}">
@@ -380,18 +380,30 @@
     $('#leyenda').innerHTML = [...zonas].map(([t, c]) => `<li><span style="background:${c}"></span>${esc(traducirZona(t))}</li>`).join('');
   }
 
+  /* ESPN entrega las zonas en inglés: se traducen las frases conocidas. */
+  const ZONAS = [
+    [/^Qualifies for round of 16$/i, 'Clasifica a octavos de final'],
+    [/^Knockout phase playoffs? - seeded$/i, 'Playoff de eliminatorias (cabeza de serie)'],
+    [/^Knockout phase playoffs? - unseeded$/i, 'Playoff de eliminatorias (sin cabeza de serie)'],
+    [/^Eliminated$/i, 'Eliminado'],
+    [/^Champions League qualifying$/i, 'Previa de Champions League'],
+    [/^Europa League qualifying$/i, 'Previa de Europa League'],
+    [/^Conference League qualifying$/i, 'Previa de Conference League'],
+    [/^Relegation playoffs?$/i, 'Playoff de descenso'],
+    [/^Relegat(ion|ed)$/i, 'Descenso'],
+    [/^Qualifies for Sudamericana KO Playoffs$/i, 'Clasifica al playoff de la Sudamericana'],
+    [/^Qualifies for MLS Cup Playoffs - Round One Best-of-3 series$/i, 'Playoffs de la MLS: primera ronda'],
+    [/^Qualifies for MLS Cup Playoffs - Wild Card Matches$/i, 'Playoffs de la MLS: comodín']
+  ];
   function traducirZona(t) {
+    for (const [re, es] of ZONAS) if (re.test(t.trim())) return es;
     return t
+      .replace(/^Qualifies for /i, 'Clasifica a ')
+      .replace(/Round of 16/i, 'octavos de final')
       .replace(/Relegation/i, 'Descenso')
-      .replace(/Promotion/i, 'Promoción')
-      .replace(/Qualifying/i, 'Clasificación')
-      .replace(/Qualification/i, 'Clasificación')
-      .replace(/Knockout Round Playoffs?/i, 'Playoff de eliminatorias')
-      .replace(/Round of 16/i, 'Octavos de final')
-      .replace(/Playoffs?/i, 'Playoff')
-      .replace(/Group Stage/i, 'Fase de grupos')
-      .replace(/League Phase/i, 'Fase de liga')
-      .replace(/Next Round/i, 'Siguiente ronda');
+      .replace(/Promotion/i, 'Ascenso')
+      .replace(/qualifying/i, '(previa)')
+      .replace(/Playoffs?/i, 'playoff');
   }
 
   $('#tabla').addEventListener('click', (e) => {
