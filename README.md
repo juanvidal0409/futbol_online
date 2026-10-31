@@ -1,5 +1,7 @@
 # Fútbol Online
 
+**Página publicada:** https://juanvidal0409.github.io/futbol_online/
+
 Página web estática con las principales ligas del mundo: tablas de posiciones, equipos y calendario de partidos (ayer, hoy y los próximos 7 días), con resultados en vivo.
 
 ## Competencias incluidas
