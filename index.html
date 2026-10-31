@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fútbol Online</title>
+  <meta name="description" content="Tablas de posiciones, equipos y calendario de las principales ligas del mundo, la Champions League y la Liga BetPlay.">
+  <meta name="theme-color" content="#0d4a2b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d4a2b'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23f4f7f1' stroke-width='4'/%3E%3Cpath d='M32 4v56' stroke='%23f4f7f1' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23ffd23f'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+
+  <header class="cancha">
+    <svg class="cancha__lineas" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="3">
+        <rect x="30" y="30" width="1140" height="360"/>
+        <line x1="600" y1="30" x2="600" y2="390"/>
+        <circle cx="600" cy="210" r="92"/>
+        <rect x="30" y="110" width="150" height="200"/>
+        <rect x="1020" y="110" width="150" height="200"/>
+        <path d="M180 160 a62 62 0 0 1 0 100"/>
+        <path d="M1020 160 a62 62 0 0 0 0 100"/>
+      </g>
+      <circle cx="600" cy="210" r="6" fill="currentColor"/>
+    </svg>
+
+    <div class="cancha__contenido">
+      <div class="marca">
+        <h1 class="marca__titulo">Fútbol Online</h1>
+        <p class="marca__sub">Tablas, equipos y partidos de las ligas que importan, de Bogotá a Mánchester.</p>
+      </div>
+
+      <nav class="ligas" aria-label="Ligas">
+        <ul class="ligas__lista" id="ligas" role="tablist"></ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido" class="contenido">
+    <section class="panel panel--partidos" aria-labelledby="t-partidos">
+      <div class="panel__cabeza">
+        <h2 id="t-partidos" class="panel__titulo">Partidos</h2>
+        <div class="alcance" role="group" aria-label="Qué partidos mostrar">
+          <button type="button" class="alcance__btn" data-alcance="todas" aria-pressed="true">Todas las ligas</button>
+          <button type="button" class="alcance__btn" data-alcance="liga" aria-pressed="false" id="alcance-liga">Solo esta liga</button>
+        </div>
+      </div>
+
+      <div class="fechas" id="fechas" role="tablist" aria-label="Fecha"></div>
+
+      <div id="partidos" class="partidos" aria-live="polite"></div>
+      <p class="nota-hora" id="nota-hora"></p>
+    </section>
+
+    <section class="panel panel--tabla" aria-labelledby="t-tabla">
+      <div class="panel__cabeza">
+        <h2 id="t-tabla" class="panel__titulo">Tabla de posiciones</h2>
+        <label class="grupo" id="grupo-wrap" hidden>
+          <span class="visualmente-oculto">Fase o grupo</span>
+          <select id="grupo"></select>
+        </label>
+      </div>
+      <p class="panel__liga" id="tabla-liga"></p>
+      <div id="tabla" class="tabla-wrap"></div>
+      <ul class="leyenda" id="leyenda"></ul>
+    </section>
+
+    <section class="panel panel--equipos" aria-labelledby="t-equipos">
+      <div class="panel__cabeza">
+        <h2 id="t-equipos" class="panel__titulo">Equipos</h2>
+        <label class="buscar">
+          <span class="visualmente-oculto">Buscar equipo</span>
+          <input type="search" id="buscar" placeholder="Buscar equipo" autocomplete="off">
+        </label>
+      </div>
+      <div id="equipos" class="equipos"></div>
+    </section>
+  </main>
+
+  <dialog class="ficha" id="ficha" aria-labelledby="ficha-nombre">
+    <div class="ficha__cuerpo" id="ficha-cuerpo"></div>
+    <button type="button" class="ficha__cerrar" id="ficha-cerrar" aria-label="Cerrar">×</button>
+  </dialog>
+
+  <footer class="pie">
+    <p>Datos en vivo de la API pública de ESPN. Horarios en tu zona horaria. Se actualiza solo cada minuto mientras haya partidos en juego.</p>
+  </footer>
+
+  <script src="js/ligas.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
