@@ -502,8 +502,10 @@
     });
 
     const anios = [...new Set(evs.map((e) => e.fecha.getFullYear()))].sort();
+    // En ESPN la temporada europea 2025-26 tiene año 2025
     const edicion = ultimoTorneo
       ? `${capital(ultimoTorneo)} ${anio}`
+      : ligaPorId(estado.liga).cruzada ? `Temporada ${anio}-${String(anio + 1).slice(2)}`
       : anios.length > 1 ? `Temporada ${anios[0]}-${String(anios[anios.length - 1]).slice(2)}` : `Edición ${anios[0]}`;
     const terminada = evs.every((e) => e.estado === 'post');
     $('#llaves-edicion').textContent = edicion + (terminada ? ' · finalizada' : ' · en curso');

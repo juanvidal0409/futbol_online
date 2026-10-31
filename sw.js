@@ -1,7 +1,7 @@
 /* Service worker: guarda los archivos de la página para que abra rápido
    y funcione como app instalada. Los datos de partidos no pasan por aquí:
    los guarda la propia página (js/almacen.js). Cambia VERSION al publicar. */
-const VERSION = 'fo-v2';
+const VERSION = 'fo-v3';
 const ARCHIVOS = [
   './',
   'index.html',
