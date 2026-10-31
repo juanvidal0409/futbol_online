@@ -76,8 +76,9 @@
     };
   }
 
-  async function partidos(ligaId, desde, hasta, fresco = false) {
-    const url = `${SITE}${ligaId}/scoreboard?dates=${ymd(desde)}-${ymd(hasta)}&limit=300`;
+  /* La API solo acepta un día por consulta (los rangos devuelven 400). */
+  async function partidosDia(ligaId, dia, fresco = false) {
+    const url = `${SITE}${ligaId}/scoreboard?dates=${ymd(dia)}`;
     const data = await getJSON(url, { fresco });
     const logoLiga = data?.leagues?.[0]?.logos?.[0]?.href || null;
     const eventos = (data?.events || []).map((e) => normalizarEvento(e, ligaId));
@@ -159,5 +160,5 @@
     };
   }
 
-  window.API = { partidos, tabla, calendarioEquipo };
+  window.API = { partidosDia, tabla, calendarioEquipo };
 })();

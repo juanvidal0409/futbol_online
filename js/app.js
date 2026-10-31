@@ -7,10 +7,10 @@
     dia: 1,             // índice en la tira de fechas (0 = ayer, 1 = hoy)
     alcance: 'todas',   // 'todas' | 'liga'
     grupo: 0,
-    eventos: new Map(), // ligaId -> eventos[]
+    eventos: new Map(), // ligaId -> Map(idPartido -> partido)
     logos: new Map(),   // ligaId -> url del logo
-    cargando: new Set(),
-    fallidas: new Set(),
+    cargando: new Set(), // claves 'liga|índiceDía' en curso
+    fallidas: new Set(), // claves 'liga|índiceDía' que fallaron
     tabla: null,
     filtro: ''
   };
@@ -97,7 +97,7 @@
     const out = [];
     for (const [liga, evs] of estado.eventos) {
       if (soloLiga && liga !== estado.liga) continue;
-      for (const ev of evs) if (claveDia(ev.fecha) === clave) out.push(ev);
+      for (const ev of evs.values()) if (claveDia(ev.fecha) === clave) out.push(ev);
     }
     return out;
   }
@@ -192,13 +192,18 @@
       .map((id) => ({ id, evs: evs.filter((e) => e.liga === id).sort((a, b) => a.fecha - b.fecha) }))
       .filter((g) => g.evs.length);
 
-    const pendientes = soloLiga ? estado.cargando.has(estado.liga) : estado.cargando.size > 0;
+    const delDia = (set) => [...set]
+      .map((k) => k.split('|'))
+      .filter(([liga, dia]) => Number(dia) === estado.dia && (!soloLiga || liga === estado.liga))
+      .map(([liga]) => liga);
+    const pendientes = delDia(estado.cargando).length > 0;
+    const fallidas = delDia(estado.fallidas);
 
     if (!porLiga.length) {
       const fecha = capital(fmtFechaLarga.format(DIAS[estado.dia]));
       if (pendientes) {
         cont.innerHTML = `<div class="vacio"><span class="balon" aria-hidden="true"></span><p>Cargando partidos…</p></div>`;
-      } else if (soloLiga && estado.fallidas.has(estado.liga)) {
+      } else if (fallidas.length && (soloLiga || fallidas.length === LIGAS.length)) {
         cont.innerHTML = errorHTML('No se pudo cargar el calendario de esta liga.', 'partidos');
       } else {
         cont.innerHTML = `<div class="vacio"><p><strong>Sin partidos el ${esc(fecha.toLowerCase())}.</strong></p>
@@ -220,7 +225,6 @@
       }).join('') + (pendientes ? `<p class="cargando-mas">Cargando más ligas…</p>` : '');
     }
 
-    const fallidas = [...estado.fallidas].filter((id) => !soloLiga || id === estado.liga);
     $('#nota-hora').innerHTML =
       `Horarios en tu hora local (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone.replace('_', ' '))}).` +
       (fallidas.length && porLiga.length
@@ -247,26 +251,53 @@
       <button type="button" class="boton" data-reintentar="${que}">Reintentar</button></div>`;
   }
 
-  async function cargarPartidos(ids, fresco = false) {
-    const desde = DIAS[0];
-    const hasta = DIAS[DIAS.length - 1];
-    ids.forEach((id) => { estado.cargando.add(id); estado.fallidas.delete(id); });
-    pintarPartidos();
-    await Promise.all(ids.map(async (id) => {
-      try {
-        const { logoLiga, eventos } = await API.partidos(id, desde, hasta, fresco);
-        estado.eventos.set(id, eventos);
-        if (logoLiga && !estado.logos.has(id)) { estado.logos.set(id, logoLiga); pintarLigas(); }
-      } catch (err) {
-        console.warn('Partidos', id, err);
-        if (!estado.eventos.has(id)) estado.fallidas.add(id);
-      } finally {
-        estado.cargando.delete(id);
-        pintarPartidos();
-        if (id === estado.liga && !estado.tabla?.length) pintarEquipos();
-      }
-    }));
+  /* Repinta como mucho una vez por cuadro aunque lleguen muchas respuestas seguidas. */
+  let repintePendiente = false;
+  function repintar() {
+    if (repintePendiente) return;
+    repintePendiente = true;
+    requestAnimationFrame(() => {
+      repintePendiente = false;
+      pintarPartidos();
+      if (!estado.tabla?.length) pintarEquipos();
+    });
   }
+
+  /* claves: 'liga|índiceDía'. La API solo da un día por consulta, así que se
+     encolan y se piden de a pocas a la vez, primero el día que se está viendo. */
+  const MAX_SIMULTANEAS = 6;
+  async function cargarPartidos(claves, fresco = false) {
+    const cola = [...new Set(claves)].sort((a, b) => {
+      const da = Math.abs(Number(a.split('|')[1]) - estado.dia);
+      const db = Math.abs(Number(b.split('|')[1]) - estado.dia);
+      return da - db;
+    });
+    cola.forEach((k) => { estado.cargando.add(k); estado.fallidas.delete(k); });
+    repintar();
+
+    async function trabajador() {
+      while (cola.length) {
+        const k = cola.shift();
+        const [liga, dia] = k.split('|');
+        try {
+          const { logoLiga, eventos } = await API.partidosDia(liga, DIAS[Number(dia)], fresco);
+          const mapa = estado.eventos.get(liga) || new Map();
+          eventos.forEach((ev) => mapa.set(ev.id, ev));
+          estado.eventos.set(liga, mapa);
+          if (logoLiga && !estado.logos.has(liga)) { estado.logos.set(liga, logoLiga); pintarLigas(); }
+        } catch (err) {
+          console.warn('Partidos', k, err);
+          estado.fallidas.add(k);
+        } finally {
+          estado.cargando.delete(k);
+          repintar();
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: MAX_SIMULTANEAS }, trabajador));
+  }
+
+  const clavesDe = (ligas, dias) => ligas.flatMap((l) => dias.map((d) => `${l}|${d}`));
 
   /* ---------- tabla ---------- */
 
@@ -375,7 +406,7 @@
     (estado.tabla || []).forEach((g) => g.entradas.forEach((e) => { if (e.id && !vistos.has(e.id)) vistos.set(e.id, { ...e, grupo: g.nombre }); }));
     // Si no hay tabla, se arma la lista con los equipos del calendario
     if (!vistos.size) {
-      (estado.eventos.get(estado.liga) || []).forEach((ev) =>
+      [...(estado.eventos.get(estado.liga)?.values() || [])].forEach((ev) =>
         [ev.local, ev.visita].forEach((t) => { if (t.id && !vistos.has(t.id)) vistos.set(t.id, { id: t.id, nombre: t.nombreLargo, logo: t.logo }); })
       );
     }
@@ -474,9 +505,10 @@
   setInterval(() => {
     const ahora = Date.now();
     const activas = [...estado.eventos].filter(([, evs]) =>
-      evs.some((e) => e.estado === 'in' || (e.estado === 'pre' && e.fecha.getTime() <= ahora && ahora - e.fecha.getTime() < 3 * 3600e3))
+      [...evs.values()].some((e) => e.estado === 'in' || (e.estado === 'pre' && e.fecha.getTime() <= ahora && ahora - e.fecha.getTime() < 3 * 3600e3))
     ).map(([id]) => id);
-    if (activas.length && !document.hidden) cargarPartidos(activas, true);
+    // Un partido de la noche puede quedar en la fecha de ESPN de ayer: se refrescan ayer y hoy
+    if (activas.length && !document.hidden) cargarPartidos(clavesDe(activas, [0, 1]), true);
   }, 60000);
 
   window.addEventListener('hashchange', () => {
@@ -489,5 +521,5 @@
   $('#alcance-liga').textContent = 'Solo ' + ligaPorId(estado.liga).corto;
   pintarLigas();
   cargarTabla();
-  cargarPartidos(LIGAS.map((l) => l.id));
+  cargarPartidos(clavesDe(LIGAS.map((l) => l.id), DIAS.map((_, i) => i)));
 })();
